@@ -15,7 +15,7 @@ class Click(db.Model):
 
 class ClickEvent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    click_id = db.Column(db.String(64), db.ForeignKey('click.click_id'))
+    click_id = db.Column(db.String(64))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     platform = db.Column(db.String(32))
     ip_address = db.Column(db.String(45))
