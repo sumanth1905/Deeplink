@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script>
+        // Parse User-Agent to extract device model and OS version
+        function parseUserAgent(ua) {
+            let device_model = 'Unknown';
+            let os_version = 'Unknown';
+
+            // iOS detection
+            if (/iPhone/.test(ua)) {
+                device_model = 'iPhone';
+                const match = ua.match(/OS ([\d_]+)/);
+                if (match) os_version = match[1].replace(/_/g, '.');
+            } else if (/iPad/.test(ua)) {
+                device_model = 'iPad';
+                const match = ua.match(/OS ([\d_]+)/);
+                if (match) os_version = match[1].replace(/_/g, '.');
+            }
+            // Android detection
+            else if (/Android/.test(ua)) {
+                device_model = 'Android Device';
+                const match = ua.match(/Android ([\d.]+)/);
+                if (match) os_version = match[1];
+                // Try to get device model from User-Agent
+                const deviceMatch = ua.match(/Android.*?;\s*([^)]+)\)/);
+                if (deviceMatch) device_model = deviceMatch[1].trim();
+            }
+
+            return { device_model, os_version };
+        }
+
+        // Collect device/browser info
+        function collectAndSend() {
+            const ua = navigator.userAgent;
+            const screenWidth = window.screen.width;
+            const screenHeight = window.screen.height;
+            const devicePixelRatio = window.devicePixelRatio;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const { device_model, os_version } = parseUserAgent(ua);
+            const language = navigator.language;
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const platform = navigator.platform;
+            const hardwareConcurrency = navigator.hardwareConcurrency;
+
+            function sendData(data) {
+                fetch(window.location.pathname + '/collect', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                }).then(() => {
+                    setTimeout(() => {
+                        window.location.href = "{{ redirect_url }}";
+                    }, 500);
+                });
+            }
+
+            if (navigator.userAgentData) {
+                navigator.userAgentData.getHighEntropyValues([
+                    "platform", "platformVersion", "model", "architecture", "bitness", "uaFullVersion"
+                ]).then(uaData => {
+                    sendData({
+                        screen_width: screenWidth,
+                        screen_height: screenHeight,
+                        device_pixel_ratio: devicePixelRatio,
+                        viewport_width: viewportWidth,
+                        viewport_height: viewportHeight,
+                        device_model: uaData.model || device_model,
+                        os_version: uaData.platformVersion || os_version,
+                        platform: uaData.platform || platform,
+                        language: language,
+                        timezone: timezone,
+                        user_agent: ua,
+                        referrer: document.referrer,
+                        hardware_concurrency: hardwareConcurrency
+                    });
+                });
+            } else {
+                sendData({
+                    screen_width: screenWidth,
+                    screen_height: screenHeight,
+                    device_pixel_ratio: devicePixelRatio,
+                    viewport_width: viewportWidth,
+                    viewport_height: viewportHeight,
+                    device_model: device_model,
+                    os_version: os_version,
+                    platform: platform,
+                    language: language,
+                    timezone: timezone,
+                    user_agent: ua,
+                    referrer: document.referrer,
+                    hardware_concurrency: hardwareConcurrency
+                });
+            }
+        }
+
+        window.onload = collectAndSend;
+    </script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+    </style>
+</head>
+<body>
+    <h2>Redirecting you to the app...</h2>
+    <p>If you are not redirected automatically, <a href="{{ redirect_url }}">click here</a>.</p>
+</body>
+</html>
