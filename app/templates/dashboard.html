@@ -8,34 +8,51 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <!-- List.js for filtering/sorting -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/2.3.1/list.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <style>
-        body { background-color: #f8f9fa; font-family: 'Poppins', sans-serif; }
-        .navbar { box-shadow: 0 2px 4px rgba(0,0,0,.1); }
-        .card { border: none; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0,0,0,.08); }
-        .table-hover tbody tr:hover { background-color: #f1f1f1; }
-        .copy-btn { cursor: pointer; }
-        .section-title { font-weight: 600; font-size: 1.3rem; margin-bottom: 1rem; }
-        .filter-btn { border: none; background: none; color: #0d6efd; font-size: 1.1rem; cursor: pointer; }
-        .filter-btn.active { color: #198754; }
-        .timestamp { font-size: 0.95em; color: #888; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        .card {
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,.1);
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+        }
+        .copy-btn {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top mb-4">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="/admin"><i class="bi bi-link-45deg"></i> Taxina DeepLink</a>
+            <a class="navbar-brand fw-bold" href="/admin"><i class="bi bi-link-45deg"></i> DeepLinker</a>
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container my-5">
         <div class="row g-5">
-            <!-- Generate Deep Link Section -->
+            <!-- Generate Link Form -->
             <div class="col-lg-5">
-                <div class="card mb-4">
+                <div class="card">
                     <div class="card-header bg-white border-0 pt-4">
-                        <span class="section-title"><i class="bi bi-plus-circle"></i> Generate New Deep Link</span>
+                        <h4 class="fw-bold">Generate New Link</h4>
                     </div>
                     <div class="card-body px-4">
                         <form action="/admin/generate" method="POST">
@@ -67,58 +84,54 @@
                 </div>
             </div>
 
-            <!-- Manage Deep Links Section -->
+            <!-- Manage Links Table -->
             <div class="col-lg-7">
+                <h4 class="fw-bold mb-4">Manage Links</h4>
+
+                <!-- Filter Form -->
                 <div class="card mb-4">
-                    <div class="card-header bg-white border-0 pt-4">
-                        <span class="section-title"><i class="bi bi-list-ul"></i> Manage Deep Links</span>
-                    </div>
                     <div class="card-body">
-                        <!-- Simple Search Filter -->
-                        <div class="mb-3">
-                            <input class="search form-control" placeholder="Type to filter any column...">
-                        </div>
-                        <!-- Deep Links Table with Sorting Buttons -->
-                        <div id="deeplink-list">
+                        <form method="GET" action="/admin" class="row g-3 align-items-end">
+                            <div class="col-md-5">
+                                <label for="campaign" class="form-label">Filter by Campaign</label>
+                                <input type="text" class="form-control" name="campaign" value="{{ campaign_filter }}">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="source" class="form-label">Filter by Source</label>
+                                <input type="text" class="form-control" name="source" value="{{ source_filter }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-secondary w-100">Filter</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead>
                                     <tr>
                                         <th scope="col">Link</th>
-                                        <th scope="col">
-                                            Campaign
-                                            <button class="filter-btn sort" data-sort="campaign">⇅</button>
-                                        </th>
-                                        <th scope="col">
-                                            Source
-                                            <button class="filter-btn sort" data-sort="source">⇅</button>
-                                        </th>
-                                        <th scope="col">
-                                            Clicks
-                                            <button class="filter-btn sort" data-sort="clicks">⇅</button>
-                                        </th>
-                                        <th scope="col">
-                                            Installs
-                                            <button class="filter-btn sort" data-sort="installs">⇅</button>
-                                        </th>
-                                        <th scope="col">
-                                            Timestamp
-                                            <button class="filter-btn sort" data-sort="timestamp">⇅</button>
-                                        </th>
+                                        <th scope="col">Campaign</th>
+                                        <th scope="col">Source</th>
+                                        <th scope="col">Clicks</th>
+                                        <th scope="col">Installs</th>
                                         <th scope="col">Details</th>
                                     </tr>
                                 </thead>
-                                <tbody class="list">
+                                <tbody>
                                     {% for click, install_count in clicks_with_stats %}
                                     <tr>
                                         <td>
                                             <span id="link-{{ click.click_id }}">{{ request.host_url }}{{ click.click_id }}</span>
                                             <i class="bi bi-clipboard copy-btn ms-2 text-primary" onclick="copyToClipboard('link-{{ click.click_id }}', this)"></i>
                                         </td>
-                                        <td class="campaign">{{ click.campaign }}</td>
-                                        <td class="source">{{ click.source }}</td>
-                                        <td class="clicks">{{ click.total_clicks }}</td>
-                                        <td class="installs">{{ install_count }}</td>
-                                        <td class="timestamp">{{ click.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                        <td>{{ click.campaign }}</td>
+                                        <td>{{ click.source }}</td>
+                                        <td>{{ click.total_clicks }}</td>
+                                        <td>{{ install_count }}</td>
                                         <td>
                                             <a href="{{ url_for('main.admin_link_details', click_id=click.click_id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-eye"></i> View
@@ -148,20 +161,6 @@
                 console.error('Failed to copy: ', err);
             });
         }
-
-        // List.js for instant filtering and sorting
-        var options = {
-            valueNames: ['campaign', 'source', 'clicks', 'installs', 'timestamp']
-        };
-        var deeplinkList = new List('deeplink-list', options);
-
-        // Optional: highlight active sort button
-        document.querySelectorAll('.filter-btn.sort').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn.sort').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
     </script>
 </body>
 </html>

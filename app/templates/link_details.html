@@ -5,17 +5,10 @@
     <title>Link Details - {{ click.click_id }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/2.3.1/list.min.js"></script>
     <style>
         body { background-color: #f8f9fa; }
         .card { border: none; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0,0,0,.1); }
         .table-responsive { max-height: 400px; }
-        .summary-card { min-width: 180px; }
-        .summary-icon { font-size: 2rem; }
-        .section-title { font-weight: 600; font-size: 1.2rem; margin-bottom: 1rem; }
-        .filter-btn { border: none; background: none; color: #0d6efd; font-size: 1.1rem; cursor: pointer; }
-        .filter-btn.active { color: #198754; }
     </style>
 </head>
 <body>
@@ -26,232 +19,85 @@
     </nav>
 
     <div class="container">
-        <!-- Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card summary-card text-center p-3">
-                    <div class="summary-icon text-primary"><i class="bi bi-cursor-fill"></i></div>
-                    <div class="fw-bold fs-4">{{ click.total_clicks }}</div>
-                    <div class="text-muted">Clicks</div>
-                </div>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Link Details: {{ click.click_id }}</h3>
             </div>
-            <div class="col-md-3">
-                <div class="card summary-card text-center p-3">
-                    <div class="summary-icon text-success"><i class="bi bi-phone"></i></div>
-                    <div class="fw-bold fs-4">{{ installs|length }}</div>
-                    <div class="text-muted">Installs</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card summary-card text-center p-3">
-                    <div class="summary-icon text-warning"><i class="bi bi-graph-up-arrow"></i></div>
-                    <div class="fw-bold fs-4">
-                        {% set rate = (installs|length / (click.total_clicks if click.total_clicks > 0 else 1)) * 100 %}
-                        {{ "%.2f"|format(rate) }}%
-                    </div>
-                    <div class="text-muted">Conversion Rate</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card summary-card text-center p-3">
-                    <div class="summary-icon text-info"><i class="bi bi-clock-history"></i></div>
-                    <div class="fw-bold fs-6">{{ click.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-                    <div class="text-muted">Created</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts Row -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <div class="card mb-3">
-                    <div class="card-header bg-white border-0 pt-3">
-                        <span class="section-title"><i class="bi bi-bar-chart-line"></i> Installs & Clicks Over Time</span>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="activityChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-header bg-white border-0 pt-3">
-                        <span class="section-title"><i class="bi bi-pie-chart"></i> Platform Breakdown</span>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="platformChart"></canvas>
-                    </div>
-                </div>
+            <div class="card-body">
+                <p><strong>Campaign:</strong> {{ click.campaign }}</p>
+                <p><strong>Source:</strong> {{ click.source }}</p>
+                <p><strong>Full Link:</strong> {{ request.host_url }}{{ click.click_id }}</p>
+                <p><strong>Created:</strong> {{ click.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} UTC</p>
             </div>
         </div>
 
         <!-- Installs Table -->
         <div class="card mb-4">
             <div class="card-header">
-                <span class="section-title"><i class="bi bi-phone"></i> Installs ({{ installs|length }})</span>
+                <h4>Installs ({{ installs|length }})</h4>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <input class="search form-control" placeholder="Filter installs...">
-                </div>
-                <div id="install-list">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Install ID</th>
-                                    <th>
-                                        Platform
-                                        <button class="filter-btn sort" data-sort="platform">⇅</button>
-                                    </th>
-                                    <th>
-                                        OS Version
-                                        <button class="filter-btn sort" data-sort="os_version">⇅</button>
-                                    </th>
-                                    <th>
-                                        Device Model
-                                        <button class="filter-btn sort" data-sort="device_model">⇅</button>
-                                    </th>
-                                    <th>
-                                        IP Address
-                                        <button class="filter-btn sort" data-sort="ip_address">⇅</button>
-                                    </th>
-                                    <th>
-                                        Timestamp
-                                        <button class="filter-btn sort" data-sort="timestamp">⇅</button>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="list">
-                                {% for install in installs %}
-                                <tr>
-                                    <td>{{ install.install_id }}</td>
-                                    <td class="platform">
-                                        <i class="bi bi-{{ 'android' if install.platform == 'android' else 'apple' }}"></i>
-                                        {{ install.platform }}
-                                    </td>
-                                    <td class="os_version">{{ install.os_version }}</td>
-                                    <td class="device_model">{{ install.device_model }}</td>
-                                    <td class="ip_address">{{ install.ip_address }}</td>
-                                    <td class="timestamp">{{ install.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Install ID</th>
+                                <th>Platform</th>
+                                <th>OS Version</th>
+                                <th>Device Model</th>
+                                <th>IP Address</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for install in installs %}
+                            <tr>
+                                <td>{{ install.install_id }}</td>
+                                <td><i class="bi bi-{{ 'android' if 'android' in install.device_model|lower else 'apple' }}"></i></td>
+                                <td>{{ install.os_version }}</td>
+                                <td>{{ install.device_model }}</td>
+                                <td>{{ install.ip_address }}</td>
+                                <td>{{ install.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
         <!-- Click Events Table -->
-        <div class="card mb-4">
+        <div class="card">
             <div class="card-header">
-                <span class="section-title"><i class="bi bi-fingerprint"></i> Click Events ({{ click_events|length }})</span>
+                <h4>Click Events (Fingerprints) ({{ click_events|length }})</h4>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <input class="search form-control" placeholder="Filter click events...">
-                </div>
-                <div id="event-list">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        Platform
-                                        <button class="filter-btn sort" data-sort="platform">⇅</button>
-                                    </th>
-                                    <th>
-                                        IP Address
-                                        <button class="filter-btn sort" data-sort="ip_address">⇅</button>
-                                    </th>
-                                    <th>
-                                        Language
-                                        <button class="filter-btn sort" data-sort="language">⇅</button>
-                                    </th>
-                                    <th>
-                                        Timezone
-                                        <button class="filter-btn sort" data-sort="timezone">⇅</button>
-                                    </th>
-                                    <th>
-                                        Timestamp
-                                        <button class="filter-btn sort" data-sort="timestamp">⇅</button>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="list">
-                                {% for event in click_events %}
-                                <tr>
-                                    <td class="platform">{{ event.platform }}</td>
-                                    <td class="ip_address">{{ event.ip_address }}</td>
-                                    <td class="language">{{ event.language }}</td>
-                                    <td class="timezone">{{ event.timezone }}</td>
-                                    <td class="timestamp">{{ event.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Platform</th>
+                                <th>IP Address</th>
+                                <th>Language</th>
+                                <th>Timezone</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in click_events %}
+                            <tr>
+                                <td>{{ event.platform }}</td>
+                                <td>{{ event.ip_address }}</td>
+                                <td>{{ event.language }}</td>
+                                <td>{{ event.timezone }}</td>
+                                <td>{{ event.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Chart.js and List.js scripts -->
-    <script>
-        // Prepare data for charts
-        //const installs = [
-            //{% for install in installs %}
-                //{ ts: "{{ install.timestamp.strftime('%Y-%m-%d') }}", platform: "{{ install.platform }}" }{% if not loop.last %},{% endif %}
-            //{% endfor %}
-        //];
-        //const clicks = [
-            //{% for event in click_events %}
-                //{ ts: "{{ event.timestamp.strftime('%Y-%m-%d') }}", platform: "{{ event.platform }}" }{% if not loop.last %},{% endif %}
-            //{% endfor %}
-        //];
-
-        // Installs & Clicks Over Time Chart
-        const days = [...new Set([...installs.map(i => i.ts), ...clicks.map(c => c.ts)])].sort();
-        const installCounts = days.map(d => installs.filter(i => i.ts === d).length);
-        const clickCounts = days.map(d => clicks.filter(c => c.ts === d).length);
-
-        new Chart(document.getElementById('activityChart'), {
-            type: 'line',
-            data: {
-                labels: days,
-                datasets: [
-                    { label: 'Installs', data: installCounts, borderColor: 'green', backgroundColor: 'rgba(25,135,84,0.1)', fill: true, tension: 0.3 },
-                    { label: 'Clicks', data: clickCounts, borderColor: 'blue', backgroundColor: 'rgba(13,110,253,0.1)', fill: true, tension: 0.3 }
-                ]
-            }
-        });
-
-        // Platform Breakdown Chart
-        const platforms = {};
-        installs.forEach(i => { platforms[i.platform] = (platforms[i.platform] || 0) + 1; });
-        new Chart(document.getElementById('platformChart'), {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(platforms),
-                datasets: [{
-                    data: Object.values(platforms),
-                    backgroundColor: ['rgba(13,110,253,0.7)', 'rgba(25,135,84,0.7)', 'rgba(255,193,7,0.7)']
-                }]
-            }
-        });
-
-        // List.js for installs and click events tables
-        new List('install-list', { valueNames: ['platform', 'os_version', 'device_model', 'ip_address', 'timestamp'] });
-        new List('event-list', { valueNames: ['platform', 'ip_address', 'language', 'timezone', 'timestamp'] });
-
-        // Optional: highlight active sort button
-        document.querySelectorAll('.filter-btn.sort').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn.sort').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
-    </script>
 </body>
 </html>
