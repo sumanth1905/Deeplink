@@ -76,6 +76,15 @@
                                 <label for="web_url" class="form-label">Web Fallback URL</label>
                                 <input type="url" class="form-control" id="web_url" name="web_url" required>
                             </div>
+                            <div class="mb-3">
+                                <label for="package_name" class="form-label">Android Package Name</label>
+                                <input type="text" class="form-control" id="package_name" name="package_name" required>
+                            </div>
+                            <!-- Optionally for iOS -->
+                            <div class="mb-3">
+                                <label for="ios_bundle_id" class="form-label">iOS Bundle ID</label>
+                                <input type="text" class="form-control" id="ios_bundle_id" name="ios_bundle_id">
+                            </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-plus-circle"></i> Generate Link</button>
                             </div>
@@ -87,25 +96,6 @@
             <!-- Manage Links Table -->
             <div class="col-lg-7">
                 <h4 class="fw-bold mb-4">Manage Links</h4>
-
-                <!-- Filter Form -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="GET" action="/admin" class="row g-3 align-items-end">
-                            <div class="col-md-5">
-                                <label for="campaign" class="form-label">Filter by Campaign</label>
-                                <input type="text" class="form-control" name="campaign" value="{{ campaign_filter }}">
-                            </div>
-                            <div class="col-md-5">
-                                <label for="source" class="form-label">Filter by Source</label>
-                                <input type="text" class="form-control" name="source" value="{{ source_filter }}">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <div class="card">
                     <div class="card-body p-0">
@@ -122,7 +112,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for click, install_count in clicks_with_stats %}
+                                    {% for click in clicks %}
                                     <tr>
                                         <td>
                                             <span id="link-{{ click.click_id }}">{{ request.host_url }}{{ click.click_id }}</span>
@@ -131,11 +121,10 @@
                                         <td>{{ click.campaign }}</td>
                                         <td>{{ click.source }}</td>
                                         <td>{{ click.total_clicks }}</td>
-                                        <td>{{ install_count }}</td>
                                         <td>
-                                            <a href="{{ url_for('main.admin_link_details', click_id=click.click_id) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i> View
-                                            </a>
+                                            {{ click.installs|length if click.installs is defined else 0 }}
+                                        </td>
+                                        <td>
                                         </td>
                                     </tr>
                                     {% endfor %}
