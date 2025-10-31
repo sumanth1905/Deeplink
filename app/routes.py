@@ -5,6 +5,7 @@ import string
 import random
 from datetime import datetime, timedelta
 import re
+import urllib.parse
 
 main = Blueprint('main', __name__)
 
@@ -85,7 +86,19 @@ def click_redirect(click_id):
     ua = user_agent.lower() if user_agent else ''
     if 'android' in ua:
         platform = 'android'
-        redirect_url = f"{click.play_store_url}&referrer=click_id%3D{click_id}"
+        
+        # --- Build a complete referrer string ---
+        # 1. Add your custom click_id for your system
+        custom_referrer = f"click_id={click_id}"
+        
+        # 2. Add standard UTM parameters for Google Analytics
+        utm_params = f"utm_source={click.source or 'deeplink'}&utm_campaign={click.campaign or 'default'}&utm_medium=cpc"
+        
+        # 3. Combine them, URL-encode, and attach to the Play Store URL
+        full_referrer = urllib.parse.quote(f"{custom_referrer}&{utm_params}")
+        redirect_url = f"{click.play_store_url}&referrer={full_referrer}"
+        # --- End of new logic ---
+
     elif 'iphone' in ua or 'ipad' in ua:
         platform = 'ios'
         redirect_url = click.app_store_url
