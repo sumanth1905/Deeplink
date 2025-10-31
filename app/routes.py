@@ -84,30 +84,42 @@ def click_redirect(click_id):
 
     user_agent = request.headers.get('User-Agent')
     ua = user_agent.lower() if user_agent else ''
+
+    # --- New Hybrid Logic ---
     if 'android' in ua:
-        platform = 'android'
+        # For Android, collect basic data on the server and redirect immediately.
+        # This avoids the browser landing page to maximize referrer survival.
         
-        # --- Build a complete referrer string ---
-        # 1. Add your custom click_id for your system
-        custom_referrer = f"click_id={click_id}"
-        
-        # 2. Add standard UTM parameters for Google Analytics
-        utm_params = f"utm_source={click.source or 'deeplink'}&utm_campaign={click.campaign or 'default'}&utm_medium=cpc"
-        
-        # 3. Combine them, URL-encode, and attach to the Play Store URL
-        full_referrer = urllib.parse.quote(f"{custom_referrer}&{utm_params}")
+        # 1. Log the basic click event on the server.
+        click_event = ClickEvent(
+            click_id=click_id,
+            timestamp=datetime.utcnow(),
+            platform='android',
+            ip_address=get_client_ip(request),
+            user_agent=user_agent
+        )
+        db.session.add(click_event)
+        click.total_clicks += 1
+        db.session.commit()
+
+        # 2. Build the simplified referrer URL with only the click_id.
+        full_referrer = urllib.parse.quote(f"click_id={click_id}")
         redirect_url = f"{click.play_store_url}&referrer={full_referrer}"
-        # --- End of new logic ---
+
+        # 3. Redirect immediately from the server.
+        return redirect(redirect_url, code=302)
 
     elif 'iphone' in ua or 'ipad' in ua:
+        # For iOS, we MUST use the landing page to get a fingerprint.
         platform = 'ios'
         redirect_url = click.app_store_url
+        return render_template('landing.html', redirect_url=redirect_url)
+    
     else:
+        # For Web and other platforms, use the landing page.
         platform = 'web'
         redirect_url = click.web_url
-
-    # Render landing page instead of redirecting
-    return render_template('landing.html', redirect_url=redirect_url)
+        return render_template('landing.html', redirect_url=redirect_url)
 
 @main.route('/api/install', methods=['POST'])
 def report_install():
