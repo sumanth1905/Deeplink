@@ -19,16 +19,13 @@
     </nav>
 
     <div class="container">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3>Link Details: {{ click.click_id }}</h3>
-            </div>
-            <div class="card-body">
-                <p><strong>Campaign:</strong> {{ click.campaign }}</p>
-                <p><strong>Source:</strong> {{ click.source }}</p>
-                <p><strong>Full Link:</strong> {{ request.host_url }}{{ click.click_id }}</p>
-                <p><strong>Created:</strong> {{ click.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} UTC</p>
-            </div>
+        <!-- Link Info -->
+        <div class="mb-4">
+            <h3>Link Details: {{ click.click_id }}</h3>
+            <p><strong>Campaign:</strong> {{ click.campaign }}</p>
+            <p><strong>Source:</strong> {{ click.source }}</p>
+            <p><strong>Full Link:</strong> {{ request.host_url }}{{ click.click_id }}</p>
+            <p><strong>Created:</strong> {{ click.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} UTC</p>
         </div>
 
         <!-- Installs Table -->
@@ -37,14 +34,15 @@
                 <h4>Installs ({{ installs|length }})</h4>
             </div>
             <div class="card-body">
+                <input type="text" id="install-search" class="form-control mb-3" placeholder="Filter installs...">
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <thead>
                             <tr>
                                 <th>Install ID</th>
                                 <th>Platform</th>
-                                <th>OS Version</th>
                                 <th>Device Model</th>
+                                <th>OS Version</th>
                                 <th>IP Address</th>
                                 <th>Timestamp</th>
                             </tr>
@@ -53,9 +51,9 @@
                             {% for install in installs %}
                             <tr>
                                 <td>{{ install.install_id }}</td>
-                                <td><i class="bi bi-{{ 'android' if 'android' in install.device_model|lower else 'apple' }}"></i></td>
-                                <td>{{ install.os_version }}</td>
+                                <td>{{ install.platform }}</td>
                                 <td>{{ install.device_model }}</td>
+                                <td>{{ install.os_version }}</td>
                                 <td>{{ install.ip_address }}</td>
                                 <td>{{ install.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
                             </tr>
@@ -72,6 +70,7 @@
                 <h4>Click Events (Fingerprints) ({{ click_events|length }})</h4>
             </div>
             <div class="card-body">
+                <input type="text" id="click-search" class="form-control mb-3" placeholder="Filter clicks...">
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <thead>
@@ -99,5 +98,24 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // JavaScript for filtering installs and clicks
+        document.getElementById('install-search').addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.table-responsive table tbody tr');
+            rows.forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+            });
+        });
+
+        document.getElementById('click-search').addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.table-responsive table tbody tr');
+            rows.forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+            });
+        });
+    </script>
 </body>
 </html>
