@@ -109,20 +109,24 @@ def click_redirect(click_id):
     ua = user_agent.lower() if user_agent else ''
 
     if 'android' in ua:
-        # Build intent URL to open app, fallback to Play Store
+        # Use intent URL to open app, fallback ONLY to Play Store
+        play_store_url = click.play_store_url
+        package_name = click.package_name
+        # Use a custom scheme if your app supports it, otherwise use "intent://"
         intent_url = (
             f"intent://open?click_id={click_id}#Intent;"
-            f"scheme=yourappscheme;"  # Replace with your app's URI scheme if you have one
-            f"package={click.package_name};"
-            f"S.browser_fallback_url={click.play_store_url};end"
+            f"package={package_name};"
+            f"S.browser_fallback_url={play_store_url};"
+            f"end"
         )
         return redirect(intent_url, code=302)
 
     elif 'iphone' in ua or 'ipad' in ua:
-        # For iOS, redirect to universal link or App Store
+        # For iOS, redirect to App Store (Universal Links require additional setup)
         return redirect(click.app_store_url, code=302)
 
     else:
+        # Fallback for web
         return redirect(click.web_url, code=302)
 
 @main.route('/api/install', methods=['POST'])
@@ -288,5 +292,4 @@ def collect_landing_data(click_id):
     # Increment total_clicks
     click.total_clicks += 1
     db.session.commit()
-
     return jsonify({'status': 'ok'})
