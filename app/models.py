@@ -10,6 +10,8 @@ class Click(db.Model):
     play_store_url = db.Column(db.String(512))
     app_store_url = db.Column(db.String(512))
     web_url = db.Column(db.String(512))
+    package_name = db.Column(db.String(128))
+    ios_bundle_id = db.Column(db.String(128))
     total_clicks = db.Column(db.Integer, default=0)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 

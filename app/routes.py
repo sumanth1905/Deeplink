@@ -71,6 +71,8 @@ def admin_generate_link():
         play_store_url=request.form.get('play_store_url'),
         app_store_url=request.form.get('app_store_url'),
         web_url=request.form.get('web_url'),
+        package_name=request.form.get('package_name'),  # <-- Add this
+        ios_bundle_id=request.form.get('ios_bundle_id'), # <-- Optional
         total_clicks=0,
         timestamp=datetime.utcnow()
     )
