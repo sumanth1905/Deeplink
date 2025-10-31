@@ -105,29 +105,15 @@ def click_redirect(click_id):
     if not click:
         return "invalid url", 404
 
-    user_agent = request.headers.get('User-Agent')
-    ua = user_agent.lower() if user_agent else ''
-
-    if 'android' in ua:
-        # Use intent URL to open app, fallback ONLY to Play Store
-        play_store_url = click.play_store_url
-        package_name = click.package_name
-        # Use a custom scheme if your app supports it, otherwise use "intent://"
-        intent_url = (
-            f"intent://open?click_id={click_id}#Intent;"
-            f"package={package_name};"
-            f"S.browser_fallback_url={play_store_url};"
-            f"end"
-        )
-        return redirect(intent_url, code=302)
-
-    elif 'iphone' in ua or 'ipad' in ua:
-        # For iOS, redirect to App Store (Universal Links require additional setup)
-        return redirect(click.app_store_url, code=302)
-
-    else:
-        # Fallback for web
-        return redirect(click.web_url, code=302)
+    # Pass all needed info to the landing page
+    return render_template(
+        'landing.html',
+        click_id=click_id,
+        package_name=click.package_name,
+        play_store_url=click.play_store_url,
+        android_scheme=f"{click.package_name}://open?click_id={click_id}",
+        app_store_url=click.app_store_url
+    )
 
 @main.route('/api/install', methods=['POST'])
 def report_install():
