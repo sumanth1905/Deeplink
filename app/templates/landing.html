@@ -97,26 +97,7 @@
             }
         }
 
-        window.onload = function() {
-            var ua = navigator.userAgent.toLowerCase();
-            var isAndroid = ua.indexOf('android') > -1;
-            var isIOS = ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1;
-
-            if (isAndroid) {
-                // Try to open the app using the custom scheme
-                window.location = "{{ android_scheme }}";
-                // Fallback to Play Store after 1 second
-                setTimeout(function() {
-                    window.location = "{{ play_store_url }}";
-                }, 1000);
-            } else if (isIOS) {
-                // Try to open the app using universal link or scheme
-                window.location = "{{ app_store_url }}";
-            } else {
-                // Fallback for web
-                window.location = "{{ play_store_url }}";
-            }
-        };
+        window.onload = collectAndSend;
     </script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
