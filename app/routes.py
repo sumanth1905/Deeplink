@@ -145,24 +145,21 @@ def click_redirect(click_id):
 @main.route('/api/install', methods=['POST'])
 def report_install():
     data = request.json
-    click_id = data.get('click_id')
+    click_id = data.get('click_id') # For Android
     install_id = str(uuid.uuid4())
-
-    # Check if click_id exists in the database
-    click = Click.query.filter_by(click_id=click_id).first()
-    platform = "android" if click else "ios"
-
+    
+    # Create the install record with the new push_token field
     install = Install(
-        install_id=install_id,
-        click_id=click_id,
-        platform=platform,
+        install_id=install_id, 
+        click_id=click_id, 
+        platform=data.get('platform'),
         device_model=data.get('device_model'),
         os_version=data.get('os_version'),
         language=data.get('language'),
         timezone=data.get('timezone'),
-        ip_address=get_client_ip(request),
+        ip_address=get_client_ip(request),  # <-- updated here
         advertising_id=data.get('advertising_id'),
-        push_token=data.get('push_token')
+        push_token=data.get('push_token') # Store push_token
     )
     db.session.add(install)
     db.session.commit()
