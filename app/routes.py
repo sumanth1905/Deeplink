@@ -112,7 +112,7 @@ def click_redirect(click_id):
         # Build intent URL to open app, fallback to Play Store
         intent_url = (
             f"intent://open?click_id={click_id}#Intent;"
-            #f"scheme=yourappscheme;"  # Replace with your app's URI scheme if you have one
+            f"scheme=yourappscheme;"  # Replace with your app's URI scheme if you have one
             f"package={click.package_name};"
             f"S.browser_fallback_url={click.play_store_url};end"
         )
@@ -288,4 +288,5 @@ def collect_landing_data(click_id):
     # Increment total_clicks
     click.total_clicks += 1
     db.session.commit()
+
     return jsonify({'status': 'ok'})
