@@ -103,46 +103,27 @@ def generate_link():
 def click_redirect(click_id):
     click = Click.query.filter_by(click_id=click_id).first()
     if not click:
-        return " invalid url ", 404
+        return "invalid url", 404
 
     user_agent = request.headers.get('User-Agent')
     ua = user_agent.lower() if user_agent else ''
 
-    # --- New Hybrid Logic ---
     if 'android' in ua:
-        # For Android, collect basic data on the server and redirect immediately.
-        # This avoids the browser landing page to maximize referrer survival.
-        
-        # 1. Log the basic click event on the server.
-        click_event = ClickEvent(
-            click_id=click_id,
-            timestamp=datetime.utcnow(),
-            platform='android',
-            ip_address=get_client_ip(request),
-            user_agent=user_agent
+        # Build intent URL to open app, fallback to Play Store
+        intent_url = (
+            f"intent://open?click_id={click_id}#Intent;"
+            #f"scheme=yourappscheme;"  # Replace with your app's URI scheme if you have one
+            f"package={click.package_name};"
+            f"S.browser_fallback_url={click.play_store_url};end"
         )
-        db.session.add(click_event)
-        click.total_clicks += 1
-        db.session.commit()
-
-        # 2. Build the simplified referrer URL with only the click_id.
-        full_referrer = urllib.parse.quote(f"click_id={click_id}")
-        redirect_url = f"{click.play_store_url}&referrer={full_referrer}"
-
-        # 3. Redirect immediately from the server.
-        return redirect(redirect_url, code=302)
+        return redirect(intent_url, code=302)
 
     elif 'iphone' in ua or 'ipad' in ua:
-        # For iOS, we MUST use the landing page to get a fingerprint.
-        platform = 'ios'
-        redirect_url = click.app_store_url
-        return render_template('landing.html', redirect_url=redirect_url)
-    
+        # For iOS, redirect to universal link or App Store
+        return redirect(click.app_store_url, code=302)
+
     else:
-        # For Web and other platforms, use the landing page.
-        platform = 'web'
-        redirect_url = click.web_url
-        return render_template('landing.html', redirect_url=redirect_url)
+        return redirect(click.web_url, code=302)
 
 @main.route('/api/install', methods=['POST'])
 def report_install():
