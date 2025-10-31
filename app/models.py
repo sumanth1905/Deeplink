@@ -15,7 +15,7 @@ class Click(db.Model):
 
 class ClickEvent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    click_id = db.Column(db.String(64))
+    click_id = db.Column(db.String(64), db.ForeignKey('click.click_id'))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     platform = db.Column(db.String(32))
     ip_address = db.Column(db.String(45))
@@ -32,6 +32,7 @@ class Install(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     install_id = db.Column(db.String(64), unique=True, nullable=False)
     click_id = db.Column(db.String(64), db.ForeignKey('click.click_id'), nullable=True)
+    platform = db.Column(db.String(32))
     
     # Existing specific fields
     device_model = db.Column(db.String(128))
