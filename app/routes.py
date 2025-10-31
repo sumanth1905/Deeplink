@@ -9,6 +9,27 @@ import urllib.parse
 
 main = Blueprint('main', __name__)
 
+def get_os_version(user_agent_string):
+    """Parses the Android OS version from a User-Agent string."""
+    if not user_agent_string:
+        return None
+    # Regex to find "Android" followed by a version number (e.g., "Android 13")
+    match = re.search(r'android\s([\d\.]+)', user_agent_string.lower())
+    if match:
+        return match.group(1)
+    return None
+
+def get_device_model(user_agent_string):
+    """Parses the device model from a User-Agent string (best-effort)."""
+    if not user_agent_string:
+        return None
+    # Regex to find the model string after "Android X.X;"
+    match = re.search(r'android\s[\d\.]+;\s([^)]+)', user_agent_string.lower())
+    if match:
+        # Return the captured group, which is the model string
+        return match.group(1).strip()
+    return None
+
 def get_client_ip(request):
     """
     Prefer IPv4 from X-Forwarded-For or remote_addr, fallback to IPv6 if no IPv4 found.
