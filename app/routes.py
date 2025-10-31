@@ -108,18 +108,23 @@ def click_redirect(click_id):
     user_agent = request.headers.get('User-Agent')
     ua = user_agent.lower() if user_agent else ''
 
+    # Build the referrer string
+    referrer = urllib.parse.quote(f"click_id={click_id}")
+
+    # Build Play Store URL with referrer
+    play_store_url_with_referrer = f"{click.play_store_url}&referrer={referrer}"
+
     if 'android' in ua:
-        # Build intent URL to open app, fallback to Play Store
         intent_url = (
             f"intent://open?click_id={click_id}#Intent;"
-            f"scheme=timewell;"  # Replace with your app's URI scheme if you have one
+            f"scheme=timewell;"
             f"package={click.package_name};"
-            f"S.browser_fallback_url={click.play_store_url};end"
+            f"S.browser_fallback_url={play_store_url_with_referrer};"
+            f"end"
         )
         return redirect(intent_url, code=302)
 
     elif 'iphone' in ua or 'ipad' in ua:
-        # For iOS, redirect to universal link or App Store
         return redirect(click.app_store_url, code=302)
 
     else:
