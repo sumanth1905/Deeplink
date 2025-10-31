@@ -152,13 +152,14 @@ def report_install():
     install = Install(
         install_id=install_id, 
         click_id=click_id, 
+        platform=data.get('platform', 'android'), # <-- ADD THIS LINE
         device_model=data.get('device_model'),
         os_version=data.get('os_version'),
         language=data.get('language'),
         timezone=data.get('timezone'),
-        ip_address=get_client_ip(request),  # <-- updated here
+        ip_address=get_client_ip(request),
         advertising_id=data.get('advertising_id'),
-        push_token=data.get('push_token') # Store push_token
+        push_token=data.get('push_token')
     )
     db.session.add(install)
     db.session.commit()
@@ -238,6 +239,7 @@ def match_install():
     install = Install(
         install_id=install_id,
         click_id=best_match.click_id,
+        platform=best_match.platform, # <-- ADD THIS LINE
         device_model=sdk_data.get('device_model'),
         os_version=sdk_data.get('os_version'),
         language=sdk_data.get('language'),
