@@ -82,7 +82,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="android_scheme" class="form-label">Android Scheme</label>
-                                <input type="text" class="form-control" id="android_scheme" name="android_scheme" placeholder="e.g., timewell" required>
+                                <input type="text" class="form-control" id="android_scheme" name="android_scheme">
                             </div>
                             <!-- Optionally for iOS -->
                             <div class="mb-3">
@@ -129,6 +129,10 @@
                                             {{ click.installs|length if click.installs is defined else 0 }}
                                         </td>
                                         <td>
+                                            <!-- ADD THIS LINK/BUTTON -->
+                                            <a href="{{ url_for('main.admin_link_details', click_id=click.click_id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
                                         </td>
                                     </tr>
                                     {% endfor %}

@@ -9,6 +9,7 @@
         body { background-color: #f8f9fa; }
         .card { border: none; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0,0,0,.1); }
         .table-responsive { max-height: 400px; }
+        .summary-icon { font-size: 2rem; }
     </style>
 </head>
 <body>
@@ -19,24 +20,42 @@
     </nav>
 
     <div class="container">
-        <!-- Link Info -->
-        <div class="mb-4">
-            <h3>Link Details: {{ click.click_id }}</h3>
-            <p><strong>Campaign:</strong> {{ click.campaign }}</p>
-            <p><strong>Source:</strong> {{ click.source }}</p>
-            <p><strong>Full Link:</strong> {{ request.host_url }}{{ click.click_id }}</p>
-            <p><strong>Created:</strong> {{ click.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} UTC</p>
+        <!-- Link Info & Summary Cards -->
+        <div class="card p-4 mb-4">
+            <h3 class="mb-3">Link Details: <span class="fw-bold text-primary">{{ click.click_id }}</span></h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Campaign:</strong> {{ click.campaign }}</p>
+                    <p><strong>Source:</strong> {{ click.source }}</p>
+                    <p><strong>Full Link:</strong> <a href="{{ request.host_url }}{{ click.click_id }}">{{ request.host_url }}{{ click.click_id }}</a></p>
+                    <p><strong>Created:</strong> {{ click.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} UTC</p>
+                </div>
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-6 text-center">
+                            <div class="summary-icon text-primary"><i class="bi bi-cursor-fill"></i></div>
+                            <div class="fw-bold fs-4">{{ click.total_clicks }}</div>
+                            <div class="text-muted">Total Clicks</div>
+                        </div>
+                        <div class="col-6 text-center">
+                            <div class="summary-icon text-success"><i class="bi bi-phone"></i></div>
+                            <div class="fw-bold fs-4">{{ installs|length }}</div>
+                            <div class="text-muted">Total Installs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Installs Table -->
-        <div class="card mb-4">
-            <div class="card-header">
+        <div class="card mb-4" id="installs-table">
+            <div class="card-header bg-white border-0 pt-3">
                 <h4>Installs ({{ installs|length }})</h4>
             </div>
             <div class="card-body">
-                <input type="text" id="install-search" class="form-control mb-3" placeholder="Filter installs...">
+                <input type="text" class="form-control mb-3 filter-input" placeholder="Filter installs...">
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm table-hover">
                         <thead>
                             <tr>
                                 <th>Install ID</th>
@@ -47,7 +66,7 @@
                                 <th>Timestamp</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="filterable-rows">
                             {% for install in installs %}
                             <tr>
                                 <td>{{ install.install_id }}</td>
@@ -57,6 +76,8 @@
                                 <td>{{ install.ip_address }}</td>
                                 <td>{{ install.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
                             </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-muted">No installs recorded for this link.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -65,14 +86,14 @@
         </div>
 
         <!-- Click Events Table -->
-        <div class="card">
-            <div class="card-header">
-                <h4>Click Events (Fingerprints) ({{ click_events|length }})</h4>
+        <div class="card" id="clicks-table">
+            <div class="card-header bg-white border-0 pt-3">
+                <h4>Click Events ({{ click_events|length }})</h4>
             </div>
             <div class="card-body">
-                <input type="text" id="click-search" class="form-control mb-3" placeholder="Filter clicks...">
+                <input type="text" class="form-control mb-3 filter-input" placeholder="Filter click events...">
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm table-hover">
                         <thead>
                             <tr>
                                 <th>Platform</th>
@@ -82,7 +103,7 @@
                                 <th>Timestamp</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="filterable-rows">
                             {% for event in click_events %}
                             <tr>
                                 <td>{{ event.platform }}</td>
@@ -91,6 +112,8 @@
                                 <td>{{ event.timezone }}</td>
                                 <td>{{ event.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
                             </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted">No click events recorded for this link.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -100,20 +123,18 @@
     </div>
 
     <script>
-        // JavaScript for filtering installs and clicks
-        document.getElementById('install-search').addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const rows = document.querySelectorAll('.table-responsive table tbody tr');
-            rows.forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
-            });
-        });
-
-        document.getElementById('click-search').addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const rows = document.querySelectorAll('.table-responsive table tbody tr');
-            rows.forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+        // JavaScript for filtering tables independently
+        document.querySelectorAll('.filter-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                // Find the parent card and then the rows within that card's table
+                const tableBody = this.closest('.card').querySelector('.filterable-rows');
+                const rows = tableBody.querySelectorAll('tr');
+                
+                rows.forEach(row => {
+                    const isVisible = row.innerText.toLowerCase().includes(query);
+                    row.style.display = isVisible ? '' : 'none';
+                });
             });
         });
     </script>
