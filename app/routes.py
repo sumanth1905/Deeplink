@@ -71,8 +71,9 @@ def admin_generate_link():
         play_store_url=request.form.get('play_store_url'),
         app_store_url=request.form.get('app_store_url'),
         web_url=request.form.get('web_url'),
-        package_name=request.form.get('package_name'),  # <-- Add this
-        ios_bundle_id=request.form.get('ios_bundle_id'), # <-- Optional
+        package_name=request.form.get('package_name'),
+        ios_bundle_id=request.form.get('ios_bundle_id'),
+        android_scheme=request.form.get('android_scheme'), # <-- ADD THIS LINE
         total_clicks=0,
         timestamp=datetime.utcnow()
     )
@@ -116,8 +117,16 @@ def click_redirect(click_id):
 
     if 'android' in ua:
         # --- This is the change ---
-        # Always redirect directly to the Play Store for Android devices.
-        return redirect(play_store_url_with_referrer, code=302)
+        # Use an intent URL to try opening the app via its scheme.
+        # If the app is not installed, it will fall back to the Play Store.
+        intent_url = (
+            f"intent://open?click_id={click_id}#Intent;"
+            f"scheme={click.android_scheme};"  # <-- USE THE DYNAMIC SCHEME
+            f"package={click.package_name};"
+            f"S.browser_fallback_url={play_store_url_with_referrer};"
+            f"end"
+        )
+        return redirect(intent_url, code=302)
 
     elif 'iphone' in ua or 'ipad' in ua:
         return redirect(click.app_store_url, code=302)

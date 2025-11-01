@@ -12,6 +12,7 @@ class Click(db.Model):
     web_url = db.Column(db.String(512))
     package_name = db.Column(db.String(128))
     ios_bundle_id = db.Column(db.String(128))
+    android_scheme = db.Column(db.String(128)) # <-- ADD THIS LINE
     total_clicks = db.Column(db.Integer, default=0)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
