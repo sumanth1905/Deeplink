@@ -109,19 +109,31 @@ def click_redirect(click_id):
     user_agent = request.headers.get('User-Agent')
     ua = user_agent.lower() if user_agent else ''
 
-    # Build the referrer string
-    referrer = urllib.parse.quote(f"click_id={click_id}")
-
-    # Build Play Store URL with referrer
-    play_store_url_with_referrer = f"{click.play_store_url}&referrer={referrer}"
-
     if 'android' in ua:
-        # --- This is the change ---
-        # Use an intent URL to try opening the app via its scheme.
-        # If the app is not installed, it will fall back to the Play Store.
+        # --- ANDROID FLOW ---
+        # 1. Register the click event directly from the server.
+        click_event = ClickEvent(
+            click_id=click_id,
+            timestamp=datetime.utcnow(),
+            platform='android',
+            ip_address=get_client_ip(request),
+            user_agent=user_agent,
+            language=request.headers.get('Accept-Language'),
+            device_model=get_device_model(user_agent),
+            os_version=get_os_version(user_agent)
+        )
+        db.session.add(click_event)
+        
+        # 2. Increment total_clicks.
+        click.total_clicks += 1
+        db.session.commit()
+
+        # 3. Proceed with the intent redirect.
+        referrer = urllib.parse.quote(f"click_id={click_id}")
+        play_store_url_with_referrer = f"{click.play_store_url}&referrer={referrer}"
         intent_url = (
             f"intent://open?click_id={click_id}#Intent;"
-            f"scheme={click.android_scheme};"  # <-- USE THE DYNAMIC SCHEME
+            f"scheme={click.android_scheme};"
             f"package={click.package_name};"
             f"S.browser_fallback_url={play_store_url_with_referrer};"
             f"end"
@@ -129,9 +141,14 @@ def click_redirect(click_id):
         return redirect(intent_url, code=302)
 
     elif 'iphone' in ua or 'ipad' in ua:
-        return redirect(click.app_store_url, code=302)
+        # --- iOS FLOW ---
+        # Render the landing page to collect rich fingerprint data.
+        # The landing page's JS will call the /collect endpoint.
+        return render_template('landing.html', redirect_url=click.app_store_url)
 
     else:
+        # --- WEB/OTHER FLOW ---
+        # Redirect directly to the web fallback URL.
         return redirect(click.web_url, code=302)
 
 @main.route('/api/install', methods=['POST'])
