@@ -55,6 +55,20 @@ def admin_dashboard():
     all_clicks = Click.query.order_by(Click.timestamp.desc()).all()
     return render_template('dashboard.html', clicks=all_clicks)
 
+@main.route('/admin/link/<click_id>')
+def admin_link_details(click_id):
+    # Fetch the specific click object.
+    click = Click.query.filter_by(click_id=click_id).first_or_404()
+    
+    # The relationships in the model will automatically provide access to installs and click_events.
+    # We pass them explicitly for clarity in the template.
+    return render_template(
+        'link_details.html', 
+        click=click, 
+        installs=click.installs, 
+        click_events=click.click_events
+    )
+
 @main.route('/admin/generate', methods=['POST'])
 def admin_generate_link():
     # Generate a unique 4-character click_id
