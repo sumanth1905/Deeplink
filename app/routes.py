@@ -115,14 +115,9 @@ def click_redirect(click_id):
     play_store_url_with_referrer = f"{click.play_store_url}&referrer={referrer}"
 
     if 'android' in ua:
-        intent_url = (
-            f"intent://open?click_id={click_id}#Intent;"
-            f"scheme=timewell;"
-            f"package={click.package_name};"
-            f"S.browser_fallback_url={play_store_url_with_referrer};"
-            f"end"
-        )
-        return redirect(intent_url, code=302)
+        # --- This is the change ---
+        # Always redirect directly to the Play Store for Android devices.
+        return redirect(play_store_url_with_referrer, code=302)
 
     elif 'iphone' in ua or 'ipad' in ua:
         return redirect(click.app_store_url, code=302)
